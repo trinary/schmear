@@ -34,10 +34,11 @@ let neighbors = (x, y, width) => [
   position(x+1, y+1, width),
 ];
 
+let nextFrame = ctx.createImageData(canvas.width, canvas.height);
+
 let convolve = function() {
   let imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
   let pixelCount = canvas.width * canvas.height;
-  let nextFrame = ctx.createImageData(imgData);
 
   for (let x = 1; x < imgData.height - 1; x++) {
     for (let y = 1; y < imgData.width - 1; y++) {
@@ -75,11 +76,16 @@ let setup = function() {
 };
 
 let frameCounter = 0;
+let frameTimer = new Date();
 
 let render = function() {
   frameCounter++;
   convolve();
-//  if (frameCounter % 10 == 0) { convolve(); }
+  let now = new Date();
+  if (frameCounter % 100 == 0) { 
+    console.log("time diff: " + (now - frameTimer));
+  }
+  frameTimer = now;
   requestAnimationFrame(render);
 };
 
