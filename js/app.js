@@ -8,94 +8,31 @@ let canvas = document.getElementById('schmear');
 canvas.width  = window.innerWidth;
 canvas.height = window.innerHeight;
 
+let gl = twgl.getWebGLContext(canvas);
+
 let bounds = canvas.getBoundingClientRect();
 
-let ctx = canvas.getContext("2d");
+var programInfo = twgl.createProgramInfo(gl, ["vs", "fs"]);
 
-let randomInt = (max) => Math.floor(Math.random() * max);
-let rgb = (r,g,b) => "rgb(" + [r,g,b] + ")";
-let addDot = function(x, y, color) {
-  ctx.beginPath();
-    ctx.fillStyle = color; // "rgb(" + [r,g,b] + ")";
-    ctx.arc(x, y, startRadius, 0, 2 * Math.PI, false);
-  ctx.fill();
-}
-
-let position = (x, y, width) => 4 * (x * width + y);
-let neighbors = (x, y, width) => [
-  position(x-1, y-1, width),
-  position(x-1, y  , width),
-  position(x-1, y+1, width),
-  position(x,   y+1, width),
-//  position(x,   y  , width),
-  position(x,   y-1, width),
-  position(x+1, y-1, width),
-  position(x+1, y  , width),
-  position(x+1, y+1, width),
-];
-
-let nextFrame = ctx.createImageData(canvas.width, canvas.height);
-
-let convolve = function() {
-  let imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
-  let pixelCount = canvas.width * canvas.height;
-
-  for (let x = 1; x < imgData.height - 1; x++) {
-    for (let y = 1; y < imgData.width - 1; y++) {
-      let thisPosition = position(x,y,imgData.width);
-      let myNeighbors = neighbors(x,y,imgData.width);
-      let avgR = imgData.data[thisPosition];
-      let avgG = imgData.data[thisPosition+1];
-      let avgB = imgData.data[thisPosition+2];
-
-      for (let i = 0; i < myNeighbors.length; i++) {
-        avgR = avgR + imgData.data[myNeighbors[i]];
-        avgG = avgG + imgData.data[myNeighbors[i]+1];
-        avgB = avgB + imgData.data[myNeighbors[i]+2];
-      }
-
-      nextFrame.data[thisPosition] = avgR / 9;
-      nextFrame.data[thisPosition+1] = avgG / 9;
-      nextFrame.data[thisPosition+2] = avgB / 9;
-      nextFrame.data[thisPosition+3] = 255;
-    }
-  }
-  ctx.putImageData(nextFrame, 0,0);
-}
-
-let setup = function() {
-  let startColor = "rgb(188, 190, 224)";
-  ctx.fillStyle = "rgb(20%, 20%, 20%)";
-  ctx.fillRect(0,0,bounds.width, bounds.height);
-  addDot(randomInt(bounds.width), randomInt(bounds.height), startColor);
-  addDot(randomInt(bounds.width), randomInt(bounds.height), startColor);
-  addDot(randomInt(bounds.width), randomInt(bounds.height), startColor);
-  addDot(randomInt(bounds.width), randomInt(bounds.height), startColor);
-  addDot(randomInt(bounds.width), randomInt(bounds.height), startColor);
-  addDot(randomInt(bounds.width), randomInt(bounds.height), startColor);
+var arrays = {
+  position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
 };
+var bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
 
-let frameCounter = 0;
-let frameTimer = new Date();
+function render(time) {
+  twgl.resizeCanvasToDisplaySize(gl.canvas);
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-let render = function() {
-  frameCounter++;
-  convolve();
-  let now = new Date();
-  if (frameCounter % 100 == 0) { 
-    console.log("time diff: " + (now - frameTimer));
-  }
-  frameTimer = now;
+  var uniforms = {
+    time: time * 0.001,
+    resolution: [gl.canvas.width, gl.canvas.height],
+  };
+
+  gl.useProgram(programInfo.program);
+  twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+  twgl.setUniforms(programInfo, uniforms);
+  twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+
   requestAnimationFrame(render);
-};
-
-window.addEventListener('click', function() {
-  let r = randomInt(256),
-      g = randomInt(256),
-      b = randomInt(256);
-
-  addDot(event.clientX,event.clientY, rgb(r,g,b));
-});
-
-setup();
-render();
+}
+requestAnimationFrame(render);
