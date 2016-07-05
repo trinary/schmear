@@ -1,35 +1,32 @@
-<html>
-  <head>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
-    <script src="/js/twgl.js"></script>
-  </head>
-  <body>
-    <canvas id="schmear" class="fullscreen"></canvas>
-  <script src="/js/app.js"></script>
-  <script id="vs" type="notjs">
-attribute vec4 position;
+	</head>
+	<body>
 
-void main() {
-  gl_Position = position;
-}
-</script>
+		<div id="container"></div>
 
-<script id="fs" type="notjs">
-precision mediump float;
+		<script src="/js/lib/three.js"></script>
+		<script src="/js/lib/Detector.js"></script>
+		<script src="/js/lib/stats.min.js"></script>
 
-uniform vec2 resolution;
-uniform float time;
+		<script id="vertexShader" type="x-shader/x-vertex">
 
-void main() {
-  vec2 uv = gl_FragCoord.xy / resolution;
-  float color = 0.0;
-  // lifted from glslsandbox.com
-  color += sin( uv.x * cos( time / 3.0 ) * 60.0 ) + cos( uv.y * cos( time / 2.80 ) * 10.0 );
-  color += sin( uv.y * sin( time / 2.0 ) * 40.0 ) + cos( uv.x * sin( time / 1.70 ) * 40.0 );
-  color += sin( uv.x * sin( time / 1.0 ) * 10.0 ) + sin( uv.y * sin( time / 3.50 ) * 80.0 );
-  color *= sin( time / 10.0 ) * 0.5;
-  gl_FragColor = vec4( vec3( color * 0.5, sin( color + time / 2.5 ) * 0.75, color ), 1.0 );
-}
-</script>
-  </body>
+			void main()	{
+				gl_Position = vec4( position, 1.0 );
+			}
+
+		</script>
+
+		<script id="fragmentShader" type="x-shader/x-fragment">
+			uniform vec2 resolution;
+			uniform float time;
+
+			void main()	{
+			}
+		</script>
+		<script src="/js/app.js"></script>
+	</body>
 </html>

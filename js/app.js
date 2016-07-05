@@ -1,38 +1,77 @@
 "use strict";
-const maxDots = 2000;
-const startRadius = 20;
-const pallete = [];
-let dots = []
 
-let canvas = document.getElementById('schmear');
-canvas.width  = window.innerWidth;
-canvas.height = window.innerHeight;
+console.log("asdf");
+if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-let gl = twgl.getWebGLContext(canvas);
+let container, stats;
+let camera, scene, renderer;
+let uniforms;
 
-let bounds = canvas.getBoundingClientRect();
+init();
+animate();
 
-var programInfo = twgl.createProgramInfo(gl, ["vs", "fs"]);
+function init() {
 
-var arrays = {
-  position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
-};
-var bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+	container = document.getElementById('container');
 
-function render(time) {
-  twgl.resizeCanvasToDisplaySize(gl.canvas);
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+	camera = new THREE.Camera();
+	camera.position.z = 1;
+  let mouseDown = false;
 
-  var uniforms = {
-    time: time * 0.001,
-    resolution: [gl.canvas.width, gl.canvas.height],
-  };
+	scene = new THREE.Scene();
 
-  gl.useProgram(programInfo.program);
-  twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-  twgl.setUniforms(programInfo, uniforms);
-  twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+	let geometry = new THREE.PlaneBufferGeometry( 2, 2 );
 
-  requestAnimationFrame(render);
+	uniforms = {
+		time:       { value: 1.0 },
+		resolution: { value: new THREE.Vector2() }
+	};
+
+	let material = new THREE.ShaderMaterial( {
+		uniforms: uniforms,
+		vertexShader: document.getElementById('vertexShader').textContent,
+		fragmentShader: document.getElementById('fragmentShader').textContent
+
+	} );
+
+	let mesh = new THREE.Mesh(geometry, material);
+	scene.add(mesh);
+
+	renderer = new THREE.WebGLRenderer();
+	renderer.setPixelRatio(window.devicePixelRatio);
+	container.appendChild(renderer.domElement);
+
+	stats = new Stats();
+	container.appendChild(stats.dom);
+
+	onWindowResize();
+
+	window.addEventListener('resize', onWindowResize, false);
+  window.addEventListener('mousedown', onMouseDown, false);
+
 }
-requestAnimationFrame(render);
+
+function onMouseDown(event) {
+}
+
+function onWindowResize(event) {
+	renderer.setSize(window.innerWidth, window.innerHeight);
+
+	uniforms.resolution.value.x = renderer.domElement.width;
+	uniforms.resolution.value.y = renderer.domElement.height;
+
+}
+
+function animate() {
+
+	requestAnimationFrame( animate );
+
+	render();
+	stats.update();
+
+}
+
+function render() {
+	uniforms.time.value += 0.05;
+	renderer.render(scene, camera);
+}
