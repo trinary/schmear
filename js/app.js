@@ -1,9 +1,8 @@
 "use strict";
 
-console.log("asdf");
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-let container, stats;
+let container, stats, svg, circle;
 let camera, scene, renderer;
 let uniforms;
 
@@ -11,7 +10,6 @@ init();
 animate();
 
 function init() {
-
 	container = document.getElementById('container');
 
 	camera = new THREE.Camera();
@@ -48,7 +46,6 @@ function init() {
 
 	window.addEventListener('resize', onWindowResize, false);
   window.addEventListener('mousedown', onMouseDown, false);
-
 }
 
 function onMouseDown(event) {
@@ -59,16 +56,32 @@ function onWindowResize(event) {
 
 	uniforms.resolution.value.x = renderer.domElement.width;
 	uniforms.resolution.value.y = renderer.domElement.height;
-
 }
 
 function animate() {
-
 	requestAnimationFrame( animate );
 
 	render();
 	stats.update();
+}
 
+function copySvgToTexture(selector) {
+  let svgString = new XMLSerializer().serializeToString(document.querySelector(selector));
+
+  let DOMURL = self.URL || self.webkitURL || self;
+  let img = new Image();
+  let svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+  let url = DOMURL.createObjectURL(svg);
+  img.onload = function() {
+    /*
+    ctx.drawImage(img, 0, 0);
+    let png = canvas.toDataURL("image/png");
+    document.querySelector('#png-container').innerHTML = '<img src="'+png+'"/>';
+    DOMURL.revokeObjectURL(png);
+    */
+    // Don't know what to do here yet
+  };
+  img.src = url;
 }
 
 function render() {
