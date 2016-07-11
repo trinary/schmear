@@ -1,4 +1,8 @@
 "use strict";
+const maxDots = 2000;
+const startRadius = 20;
+const pallete = [];
+let dots = []
 
 let canvas = document.getElementById('schmear');
 canvas.width  = window.innerWidth;
@@ -13,7 +17,7 @@ let rgb = (r,g,b) => "rgb(" + [r,g,b] + ")";
 let addDot = function(x, y, color) {
   ctx.beginPath();
     ctx.fillStyle = color; // "rgb(" + [r,g,b] + ")";
-    ctx.arc(x, y, undefined, 0, 2 * Math.PI, false);
+    ctx.arc(x, y, startRadius, 0, 2 * Math.PI, false);
   ctx.fill();
 }
 
@@ -34,9 +38,10 @@ let nextFrame = ctx.createImageData(canvas.width, canvas.height);
 
 let convolve = function() {
   let imgData = ctx.getImageData(0,0,canvas.width, canvas.height);
+  let pixelCount = canvas.width * canvas.height;
 
-  for (let x = 1; x < imgData.width - 1; x++) {
-    for (let y = 1; y < imgData.height - 1; y++) {
+  for (let x = 1; x < imgData.height - 1; x++) {
+    for (let y = 1; y < imgData.width - 1; y++) {
       let thisPosition = position(x,y,imgData.width);
       let myNeighbors = neighbors(x,y,imgData.width);
       let avgR = imgData.data[thisPosition];
