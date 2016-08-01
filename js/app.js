@@ -4,7 +4,7 @@ if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 let container, stats, svg, circle;
 let camera, scene, renderer;
-let uniforms;
+let uniforms, convolutionMaterial;
 
 init();
 animate();
@@ -14,9 +14,12 @@ function init() {
 
 	camera = new THREE.Camera();
 	camera.position.z = 1;
-  let mouseDown = false;
 
 	scene = new THREE.Scene();
+
+	renderer = new THREE.WebGLRenderer();
+	renderer.setPixelRatio(window.devicePixelRatio);
+	container.appendChild(renderer.domElement);
 
 	let geometry = new THREE.PlaneBufferGeometry( 2, 2 );
 
@@ -25,19 +28,24 @@ function init() {
 		resolution: { value: new THREE.Vector2() }
 	};
 
-	let material = new THREE.ShaderMaterial( {
-		uniforms: uniforms,
-		vertexShader: document.getElementById('vertexShader').textContent,
-		fragmentShader: document.getElementById('fragmentShader').textContent
+	let vertexSourceCode = document.getElementById('vertexShader').textContent;
+	let	fragmentSourceCode = document.getElementById('fragmentShader').textContent;
+  let gl = renderer.context;
 
-	} );
+  let glVertexShader = new THREE.WebGLShader( gl, gl.VERTEX_SHADER, vertexSourceCode );
+  let glFragmentShader = new THREE.WebGLShader( gl, gl.FRAGMENT_SHADER, fragmentSourceCode );
+
+  let program = gl.createProgram();
+
+  gl.attachShader( program, glVertexShader );
+  gl.attachShader( program, glFragmentShader );
+
+  loadImage(program);
+
+  gl.linkProgram(program);
 
 	let mesh = new THREE.Mesh(geometry, material);
 	scene.add(mesh);
-
-	renderer = new THREE.WebGLRenderer();
-	renderer.setPixelRatio(window.devicePixelRatio);
-	container.appendChild(renderer.domElement);
 
 	stats = new Stats();
 	container.appendChild(stats.dom);
@@ -46,9 +54,6 @@ function init() {
 
 	window.addEventListener('resize', onWindowResize, false);
   window.addEventListener('mousedown', onMouseDown, false);
-}
-
-function onMouseDown(event) {
 }
 
 function onWindowResize(event) {
@@ -65,7 +70,41 @@ function animate() {
 	stats.update();
 }
 
-function copySvgToTexture(selector) {
+function loadImage(program) {
+  let url = "/data/blm.jpg";
+  let img = new Image();
+  img.src = url;
+  img.onload = function() {
+    let gl = renderer.getContext();
+    let texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+
+    // provide texture coordinates for the rectangle.
+    let texCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+          0.0,  0.0,
+          1.0,  0.0,
+          0.0,  1.0,
+          0.0,  1.0,
+          1.0,  0.0,
+          1.0,  1.0]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(texCoordLocation);
+    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // Create a texture.
+    let texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Set the parameters so we can render any size image.
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    // Upload the image into the texture.
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+  }
+  /*
   let svgString = new XMLSerializer().serializeToString(document.querySelector(selector));
 
   let DOMURL = self.URL || self.webkitURL || self;
@@ -73,15 +112,13 @@ function copySvgToTexture(selector) {
   let svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
   let url = DOMURL.createObjectURL(svg);
   img.onload = function() {
-    /*
     ctx.drawImage(img, 0, 0);
     let png = canvas.toDataURL("image/png");
     document.querySelector('#png-container').innerHTML = '<img src="'+png+'"/>';
     DOMURL.revokeObjectURL(png);
-    */
     // Don't know what to do here yet
   };
-  img.src = url;
+  */
 }
 
 function render() {
