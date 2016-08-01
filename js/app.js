@@ -28,21 +28,27 @@ function init() {
 		resolution: { value: new THREE.Vector2() }
 	};
 
-	let vertexSourceCode = document.getElementById('vertexShader').textContent;
-	let	fragmentSourceCode = document.getElementById('fragmentShader').textContent;
-  let gl = renderer.context;
-
-  let glVertexShader = new THREE.WebGLShader( gl, gl.VERTEX_SHADER, vertexSourceCode );
-  let glFragmentShader = new THREE.WebGLShader( gl, gl.FRAGMENT_SHADER, fragmentSourceCode );
-
-  let program = gl.createProgram();
-
-  gl.attachShader( program, glVertexShader );
-  gl.attachShader( program, glFragmentShader );
-
-  loadImage(program);
-
-  gl.linkProgram(program);
+//	let vertexSourceCode = document.getElementById('vertexShader').textContent;
+//	let	fragmentSourceCode = document.getElementById('fragmentShader').textContent;
+//  let gl = renderer.context;
+//
+//  let glVertexShader = new THREE.WebGLShader( gl, gl.VERTEX_SHADER, vertexSourceCode );
+//  let glFragmentShader = new THREE.WebGLShader( gl, gl.FRAGMENT_SHADER, fragmentSourceCode );
+//
+//  let program = gl.createProgram();
+//
+//  gl.attachShader( program, glVertexShader );
+//  gl.attachShader( program, glFragmentShader );
+//
+//  loadImage(program);
+//
+//  gl.linkProgram(program);
+//
+  let material = new THREE.RawShaderMaterial( {
+    uniforms: uniforms,
+    vertexShader: document.getElementById( 'vertexShader' ).textContent,
+    fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+  } );
 
 	let mesh = new THREE.Mesh(geometry, material);
 	scene.add(mesh);
@@ -53,7 +59,6 @@ function init() {
 	onWindowResize();
 
 	window.addEventListener('resize', onWindowResize, false);
-  window.addEventListener('mousedown', onMouseDown, false);
 }
 
 function onWindowResize(event) {
@@ -75,7 +80,6 @@ function loadImage(program) {
   let img = new Image();
   img.src = url;
   img.onload = function() {
-    let gl = renderer.getContext();
     let texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
 
     // provide texture coordinates for the rectangle.
@@ -104,21 +108,6 @@ function loadImage(program) {
     // Upload the image into the texture.
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
   }
-  /*
-  let svgString = new XMLSerializer().serializeToString(document.querySelector(selector));
-
-  let DOMURL = self.URL || self.webkitURL || self;
-  let img = new Image();
-  let svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
-  let url = DOMURL.createObjectURL(svg);
-  img.onload = function() {
-    ctx.drawImage(img, 0, 0);
-    let png = canvas.toDataURL("image/png");
-    document.querySelector('#png-container').innerHTML = '<img src="'+png+'"/>';
-    DOMURL.revokeObjectURL(png);
-    // Don't know what to do here yet
-  };
-  */
 }
 
 function render() {
