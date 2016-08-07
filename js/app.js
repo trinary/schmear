@@ -118,7 +118,6 @@ window.webGLStart = function() {
 
     var baseImage = textures[0];
 
-    debugger;
     var program = new Program(gl, getShadersFromHTML({
       vs: 'vertexShader',
       fs: 'fragmentShader'
