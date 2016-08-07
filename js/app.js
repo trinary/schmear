@@ -1,127 +1,173 @@
 "use strict";
 
-if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+/* global window, document, LumaGL */
+/* eslint-disable no-var, max-statements, indent, no-multi-spaces */
 
-let container, stats, svg, circle;
-let camera, scene, renderer;
-let uniforms, convolutionMaterial;
 
-init();
-animate();
+window.webGLStart = function() {
 
-function init() {
-	container = document.getElementById('container');
+  var createGLContext = LumaGL.createGLContext;
+  var loadTextures = LumaGL.loadTextures;
+  var getShadersFromHTML = LumaGL.addons.getShadersFromHTML;
+  var PerspectiveCamera = LumaGL.PerspectiveCamera;
+  var Fx = LumaGL.Fx;
+  var Vec3 = LumaGL.Vec3;
+  var Mat4 = LumaGL.Mat4;
+  var Geometry = LumaGL.Geometry;
+  var Model = LumaGL.Model;
+  var Program = LumaGL.Program;
 
-	camera = new THREE.Camera();
-	camera.position.z = 1;
+  var cubeGeometry = new Geometry({
+    positions: new Float32Array([
+      -1, -1,  1,
+      1, -1,  1,
+      1,  1,  1,
+      -1,  1,  1,
 
-	scene = new THREE.Scene();
+      -1, -1, -1,
+      -1,  1, -1,
+      1,  1, -1,
+      1, -1, -1,
 
-	renderer = new THREE.WebGLRenderer();
-	renderer.setPixelRatio(window.devicePixelRatio);
-	container.appendChild(renderer.domElement);
+      -1,  1, -1,
+      -1,  1,  1,
+      1,  1,  1,
+      1,  1, -1,
 
-	let geometry = new THREE.PlaneBufferGeometry( 2, 2 );
+      -1, -1, -1,
+      1, -1, -1,
+      1, -1,  1,
+      -1, -1,  1,
 
-	uniforms = {
-		time:       { value: 1.0 },
-		resolution: { value: new THREE.Vector2() }
-	};
+      1, -1, -1,
+      1,  1, -1,
+      1,  1,  1,
+      1, -1,  1,
 
-	let vertexSourceCode = document.getElementById('vertexShader').textContent;
-	let	fragmentSourceCode = document.getElementById('fragmentShader').textContent;
-  let gl = renderer.context;
+      -1, -1, -1,
+      -1, -1,  1,
+      -1,  1,  1,
+      -1,  1, -1
+    ]),
 
-  let glVertexShader = new THREE.WebGLShader( gl, gl.VERTEX_SHADER, vertexSourceCode );
-  let glFragmentShader = new THREE.WebGLShader( gl, gl.FRAGMENT_SHADER, fragmentSourceCode );
+    texCoords: new Float32Array([
+      // Front face
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
 
-  let program = gl.createProgram();
+      // Back face
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      0.0, 0.0,
 
-  gl.attachShader( program, glVertexShader );
-  gl.attachShader( program, glFragmentShader );
+      // Top face
+      0.0, 1.0,
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
 
-  loadImage(program);
+      // Bottom face
+      1.0, 1.0,
+      0.0, 1.0,
+      0.0, 0.0,
+      1.0, 0.0,
 
-  gl.linkProgram(program);
+      // Right face
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      0.0, 0.0,
 
-	let mesh = new THREE.Mesh(geometry, material);
-	scene.add(mesh);
+      // Left face
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0
+    ]),
 
-	stats = new Stats();
-	container.appendChild(stats.dom);
+    indices: new Uint16Array([
+      0, 1, 2, 0, 2, 3,
+      4, 5, 6, 4, 6, 7,
+      8, 9, 10, 8, 10, 11,
+      12, 13, 14, 12, 14, 15,
+      16, 17, 18, 16, 18, 19,
+      20, 21, 22, 20, 22, 23
+    ])
+  });
 
-	onWindowResize();
+  var canvas = document.getElementById('mainCanvas');
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
 
-	window.addEventListener('resize', onWindowResize, false);
-  window.addEventListener('mousedown', onMouseDown, false);
-}
+  var gl = createGLContext({canvas});
 
-function onWindowResize(event) {
-	renderer.setSize(window.innerWidth, window.innerHeight);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(0, 0, 0, 1);
+  gl.clearDepth(1);
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthFunc(gl.LEQUAL);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-	uniforms.resolution.value.x = renderer.domElement.width;
-	uniforms.resolution.value.y = renderer.domElement.height;
-}
+  loadTextures(gl, {
+    urls: ['/data/blm.gif']
+  })
+  .then(function(textures) {
 
-function animate() {
-	requestAnimationFrame( animate );
+    var baseImage = textures[0];
 
-	render();
-	stats.update();
-}
+    debugger;
+    var program = new Program(gl, getShadersFromHTML({
+      vs: 'vertexShader',
+      fs: 'fragmentShader'
+    }));
 
-function loadImage(program) {
-  let url = "/data/blm.jpg";
-  let img = new Image();
-  img.src = url;
-  img.onload = function() {
-    let gl = renderer.getContext();
-    let texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+    var cube = new Model({
+      geometry: cubeGeometry,
+      program,
+      uniforms: {
+        u_image: baseImage
+      }
+    });
 
-    // provide texture coordinates for the rectangle.
-    let texCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-          0.0,  0.0,
-          1.0,  0.0,
-          0.0,  1.0,
-          0.0,  1.0,
-          1.0,  0.0,
-          1.0,  1.0]), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(texCoordLocation);
-    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+    var camera = new PerspectiveCamera({aspect: canvas.width / canvas.height});
 
-    // Create a texture.
-    let texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
+    var rCube = 0;
 
-    // Set the parameters so we can render any size image.
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    function drawScene() {
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // Upload the image into the texture.
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-  }
-  /*
-  let svgString = new XMLSerializer().serializeToString(document.querySelector(selector));
+      // get new view matrix out of element and camera matrices
+      var view = new Mat4();
+      view.mulMat42(camera.view, cube.matrix);
+      // draw Cube
+      rCube += 0.01;
 
-  let DOMURL = self.URL || self.webkitURL || self;
-  let img = new Image();
-  let svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
-  let url = DOMURL.createObjectURL(svg);
-  img.onload = function() {
-    ctx.drawImage(img, 0, 0);
-    let png = canvas.toDataURL("image/png");
-    document.querySelector('#png-container').innerHTML = '<img src="'+png+'"/>';
-    DOMURL.revokeObjectURL(png);
-    // Don't know what to do here yet
-  };
-  */
-}
+      cube
+        // update element matrix
+        .setPosition(new Vec3(0, 0, -5))
+        .setRotation(new Vec3(rCube, rCube, rCube))
+        .updateMatrix()
 
-function render() {
-	uniforms.time.value += 0.05;
-	renderer.render(scene, camera);
-}
+        // set uniforms
+        .setUniforms({
+          uMVMatrix: view,
+          uPMatrix: camera.projection
+        })
+
+        // draw triangles
+        .render();
+
+      // gl.drawElements(
+      // gl.TRIANGLES, cube.getVertexCount(), gl.UNSIGNED_SHORT, 0
+      // );
+      // request new frame
+      Fx.requestAnimationFrame(drawScene);
+    }
+
+    drawScene();
+  });
+
+};

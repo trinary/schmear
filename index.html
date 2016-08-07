@@ -3,23 +3,27 @@
 	<head>
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/lib/lumagl.js"></script>
 	</head>
-	<body>
+	<body onLoad="webGLStart();">
 
 		<div id="container">
+			<canvas id="mainCanvas"></canvas>
     </div>
-
-		<script src="/js/lib/Detector.js"></script>
-		<script src="/js/lib/three.js"></script>
-		<script src="/js/lib/stats.min.js"></script>
-
 		<script id="vertexShader" type="x-shader/x-vertex">
-attribute vec2 a_texCoord;
-varying vec2 v_texCoord;
+attribute vec3 positions;
+attribute vec2 texCoords;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+
+varying vec2 vTextureCoord;
+
 void main() {
   // pass the texCoord to the fragment shader
   // The GPU will interpolate this value between points
-  v_texCoord = a_texCoord;
+	gl_Position = uPMatrix * uMVMatrix * vec4(positions, 1.0);
+  vTextureCoord = texCoords;
 }
 		</script>
 
@@ -30,11 +34,13 @@ precision mediump float;
 uniform sampler2D u_image;
 
 // the texCoords passed in from the vertex shader.
-varying vec2 v_texCoord;
+varying vec2 vTextureCoord;
+
+uniform sampler2D uSampler;
 
 void main() {
 // Look up a color from the texture.
-  gl_FragColor = texture2D(u_image, v_texCoord);
+  gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
 }
 		</script>
 		<script src="/js/app.js"></script>
