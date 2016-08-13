@@ -13,16 +13,6 @@ window.webGLStart = function() {
   var Model = LumaGL.Model;
   var Program = LumaGL.Program;
 
-  var planeGeometry = new LumaGL.Plane({
-    type: 'x,y',
-    xlen: 10,
-    ylen: 20,
-    nx: 5,
-    nz: 5,
-    offset: 0,
-    colors: [1, 0, 1, 1]
-  });
-
   var canvas = document.getElementById('lesson05-canvas');
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
@@ -47,11 +37,20 @@ window.webGLStart = function() {
       vs: 'shader-vs',
       fs: 'shader-fs'
     }));
-    debugger;
+
+    var planeGeometry = new LumaGL.PlaneGeometry({
+      type: 'x,y',
+      xlen: 10,
+      ylen: 20,
+      nx: 5,
+      nz: 5,
+      offset: 0,
+      colors: [1, 0, 1, 1]
+    });
 
     var plane = new Model({
-      program,
-      planeGeometry,
+      program: program,
+      geometry: planeGeometry,
       uniforms: {
         uSampler: nehe
       }
@@ -61,7 +60,10 @@ window.webGLStart = function() {
       aspect: canvas.width / canvas.height,
       near: 0.1,
       far: 100,
-      position: new Vec3(0, 0, 10)});
+      position: new Vec3(0, 0, 10),
+      target: new Vec3(0,0,0)
+    });
+
     function drawScene() {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
