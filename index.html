@@ -5,6 +5,7 @@
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="/js/lib/lumagl.js"></script>
+<link rel href="/css/style.css">
 
 <script id="shader-fs" type="x-shader/x-fragment">
   #ifdef GL_ES
@@ -13,29 +14,27 @@
 
   varying vec2 vTextureCoord;
 
-  uniform sampler2D uSampler;
+  uniform sampler2D texture;
 
   void main(void) {
-    gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+    gl_FragColor = texture2D(texture, vTextureCoord);
   }
 </script>
 
 <script id="shader-vs" type="x-shader/x-vertex">
-  attribute vec3 positions;
-  attribute vec2 texCoords;
+  attribute vec2 position;
 
   varying vec2 vTextureCoord;
 
-
   void main(void) {
-    vTextureCoord = texCoords;
+    vTextureCoord = vec2(0.0,1.0)+vec2(0.5,-0.5) * (position + 1.0);
   }
 </script>
 </head>
 
 
 <body onload="webGLStart();">
-  <canvas id="lesson05-canvas" style="border: none;" width="500" height="500"></canvas>
+  <canvas id="main" class="fullscreen"></canvas>
   <div id="controls"></div>
 <script src="/index.js"></script>
 </body>

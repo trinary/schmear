@@ -1,6 +1,5 @@
 /* global window, document, LumaGL */
 /* eslint-disable no-var, max-statements, indent, no-multi-spaces */
-window.webGLStart = function() {
 
   var createGLContext = LumaGL.createGLContext;
   var loadTextures = LumaGL.loadTextures;
@@ -13,9 +12,21 @@ window.webGLStart = function() {
   var Model = LumaGL.Model;
   var Program = LumaGL.Program;
 
-  var canvas = document.getElementById('lesson05-canvas');
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
+  var planeGeometry = new LumaGL.PlaneGeometry({
+    type: 'x,y',
+    xlen: 10,
+    ylen: 20,
+    nx: 5,
+    nz: 5,
+    offset: 0,
+    colors: [1, 0, 1]
+  });
+
+  var canvas = document.getElementById('main');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+//  canvas.width = canvas.clientWidth;
+//  canvas.height = canvas.clientHeight;
 
   var gl = createGLContext({canvas});
 
@@ -33,42 +44,30 @@ window.webGLStart = function() {
 
     var nehe = textures[0];
 
-    var program = new Program(gl, getShadersFromHTML({
-      vs: 'shader-vs',
-      fs: 'shader-fs'
-    }));
-
-    var planeGeometry = new LumaGL.PlaneGeometry({
-      type: 'x,y',
-      xlen: 10,
-      ylen: 20,
-      nx: 5,
-      nz: 5,
-      offset: 0,
-      colors: [1, 0, 1, 1]
-    });
+//    var program = new Program(gl, getShadersFromHTML({
+//      vs: 'shader-vs',
+//      fs: 'shader-fs',
+//    }));
+    var program = new Program(gl);
 
     var plane = new Model({
-      program: program,
+      program,
       geometry: planeGeometry,
       uniforms: {
-        uSampler: nehe
+        texture: nehe
       }
     });
 
     var camera = new OrthoCamera({
+      fov: 45,
       aspect: canvas.width / canvas.height,
       near: 0.1,
       far: 100,
-      position: new Vec3(0, 0, 10),
-      target: new Vec3(0,0,0)
-    });
+      target: new Vec3(0, 0, 0),
+      position: new Vec3(0, 0, 10)});
 
     function drawScene() {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-      // get new view matrix out of element and camera matrices
-      // draw Cube
 
       plane.render();
 
@@ -78,4 +77,3 @@ window.webGLStart = function() {
     drawScene();
   });
 
-};
